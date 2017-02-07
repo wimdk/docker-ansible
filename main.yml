@@ -1,0 +1,7 @@
+
+- name : apply docker to all
+  hosts: servers
+  #remote_user: root 
+ 
+  roles: 
+        - centos-docker
