@@ -1,0 +1,5 @@
+[jenkins-master]
+# add your jenkins master host here
+
+[jenkins-slaves]
+# add your jenkins slave hosts here 

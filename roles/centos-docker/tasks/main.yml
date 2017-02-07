@@ -19,3 +19,11 @@
 
 - name: Start the docker service
   service: name=docker state=started enabled=yes
+
+- name: install python-pip
+  yum:
+    name: python-pip
+
+- name: install docker-py
+  pip:
+   name: docker-py
