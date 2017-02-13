@@ -1,0 +1,15 @@
+---
+
+jenkins_build_path: '/opt/images/jenkins'
+
+jenkins_master_image: 'jenkins-master'
+jenkins_master_container_name: 'jenkins'
+jenkins_master_data_container_name: 'jenkins_data'
+
+jenkins_master_port: '8080'
+jenkins_master_slaves_port: '50000'
+
+jenkins_slave_image: 'jenkins_slave'
+
+jenkins_version : 2.32.2
+tiny_version : v0.14.0

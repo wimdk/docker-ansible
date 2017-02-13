@@ -1,0 +1,7 @@
+credentials
+gradle
+workflow-aggregator
+pipeline-stage-view
+docker-plugin
+git
+

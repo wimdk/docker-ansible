@@ -1,8 +1,65 @@
+- name: Prepare build directory
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ jenkins_build_path }}/master"
+    - "{{ jenkins_build_path }}/master/certs"
+    - "{{ jenkins_build_path }}/slave"
+
 - file:
     path: /opt/tools/jenkins
     state: directory
     mode: 0755
 
-- name: pull jenkins image
+- template:
+    src: Dockerfile.j2
+    dest: "{{ jenkins_build_path }}/master/Dockerfile" 
+
+- name: Prepare to build Jenkins master image
+  copy: src=master/{{ item }} dest={{ jenkins_build_path }}/master/{{ item }}
+  with_items:
+    - init.groovy
+    - jenkins.sh
+    - plugins.sh
+    - plugins.txt
+
+- name: Build Jenkins master image
   docker_image:
-    name: jenkins
+    name: "{{ jenkins_master_image }}"
+    path: "{{ jenkins_build_path }}/master"
+    state: present
+    force: yes
+
+
+
+- name: Check jenkins container exists
+  shell: docker ps --filter="name={{ jenkins_master_container_name }}"
+  register: jenkins_container
+
+- name: Create jenkins container
+  docker_container:
+    name: "{{ jenkins_master_container_name }}"
+    image: "{{ jenkins_master_image }}"
+    state: started
+    published_ports:
+      - "{{ jenkins_master_port }}:8080"
+      - "{{ jenkins_master_slaves_port }}:50000"
+    volumes:
+      - "/usr/bin/docker:/usr/bin/docker"
+      - "/opt/tools/jenkins:/var/jenkins_home" 
+  when: jenkins_container.stdout.find('{{ jenkins_master_container_name }}') == -1
+
+- name: Wait for Jenkins starts
+  wait_for:
+    port: 8080
+    delay: 10
+  when: jenkins_container.stdout.find('{{ jenkins_master_container_name }}') == -1
+
+- name: Get initial admin password
+  shell: docker run --rm --volumes-from={{ jenkins_master_container_name }} {{ jenkins_master_image }} cat /var/jenkins_home/secrets/initialAdminPassword
+  register: admin_password
+  when: jenkins_container.stdout.find('{{ jenkins_master_container_name }}') == -1
+
+- name: Print initial admin password
+  debug: msg="Initial admin password {{ admin_password.stdout }}"
+  when: jenkins_container.stdout.find('{{ jenkins_master_container_name }}') == -1
+
